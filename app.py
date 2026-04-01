@@ -1,10 +1,3 @@
-# =============================================================================
-# NUTRIVIDA COLOMBIA v6.0 — Sistema Integral de Evaluación Nutricional
-# =============================================================================
-# © 2026 Maira Alejandra Carrillo Florez — Todos los derechos reservados
-# Nutricionista - Dietista | Universidad de Pamplona
-# Protegido bajo la Ley 23 de 1982, Decisión Andina 351
-# =============================================================================
 
 import streamlit as st
 import pandas as pd
@@ -13,6 +6,9 @@ import plotly.graph_objects as go
 import plotly.express as px
 from datetime import date
 import io
+import hashlib
+import time
+
 try:
     from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
     from openpyxl.utils import get_column_letter
@@ -20,62 +16,339 @@ try:
 except ImportError:
     OPENPYXL_OK = False
 
-st.set_page_config(page_title="NutriVida Colombia v6.0", page_icon="🌿", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(
+    page_title="NutriVida Colombia",
+    page_icon="🌿",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# ── Paleta nutrición ──────────────────────────────────────────────────────────
+# Verde esmeralda (vida, alimentos frescos), Morado (bienestar profesional),
+# Dorado (energía, vitalidad), Blanco (limpieza institucional)
 
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap');
-html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; }
-.stApp { background: #f7f4fb; color: #1a1025; }
-section[data-testid="stSidebar"] { background: linear-gradient(180deg, #2d1b69 0%, #1e1045 100%); border-right: none; }
-section[data-testid="stSidebar"] * { color: #e8deff !important; }
-section[data-testid="stSidebar"] .stRadio label { background: rgba(255,255,255,0.06); border-radius: 8px; padding: 8px 14px !important; font-size: 0.88rem !important; transition: background 0.2s; cursor: pointer; }
-section[data-testid="stSidebar"] .stRadio label:hover { background: rgba(255,255,255,0.12); }
-.main-header { background: linear-gradient(135deg, #2d1b69 0%, #4a2c9e 50%, #6b3fbf 100%); border-radius: 16px; padding: 36px 44px; margin-bottom: 28px; position: relative; overflow: hidden; }
-.main-header h1 { font-family: 'Playfair Display', serif; font-size: 2.2rem; font-weight: 700; color: #ffffff; margin: 0 0 6px 0; }
-.main-header p { color: rgba(255,255,255,0.6); font-size: 0.82rem; margin: 0; font-family: 'DM Mono', monospace; letter-spacing: 0.8px; }
-.gov-badge { display: inline-block; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.85); font-size: 0.68rem; font-family: 'DM Mono', monospace; padding: 4px 12px; border-radius: 20px; margin-bottom: 12px; letter-spacing: 1px; text-transform: uppercase; }
-.author-badge { display: inline-block; background: rgba(255,215,0,0.15); border: 1px solid rgba(255,215,0,0.3); color: #ffd700; font-size: 0.7rem; font-family: 'DM Mono', monospace; padding: 4px 12px; border-radius: 20px; margin-left: 8px; }
-.section-card { background: white; border: 1px solid #e8e0f5; border-radius: 14px; padding: 24px 28px; margin: 16px 0; box-shadow: 0 2px 12px rgba(45,27,105,0.06); }
-.section-card-title { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 600; color: #2d1b69; margin: 0 0 4px 0; padding-bottom: 10px; border-bottom: 2px solid #f3e8ff; }
-.section-card-subtitle { font-size: 0.75rem; color: #9580c0; font-family: 'DM Mono', monospace; margin: 0 0 16px 0; letter-spacing: 0.5px; }
-.section-title { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 2.5px; color: #9580c0; font-family: 'DM Mono', monospace; margin: 28px 0 14px; padding-bottom: 8px; border-bottom: 1px solid #e8e0f5; }
-.grupo-etario-badge { display: inline-block; background: linear-gradient(135deg,#2d1b69,#6b3fbf); color: white; font-size: 0.72rem; font-family: 'DM Mono', monospace; padding: 4px 14px; border-radius: 20px; margin-bottom: 16px; letter-spacing: 0.5px; }
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap');
+
+html, body, [class*="css"] { font-family: "DM Sans", sans-serif; }
+
+.stApp { background: #f8f9f4; color: #1a2010; }
+
+section[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #1a3a2a 0%, #0f2418 100%);
+    border-right: none;
+}
+section[data-testid="stSidebar"] * { color: #d4edda !important; }
+section[data-testid="stSidebar"] .stRadio label {
+    background: rgba(255,255,255,0.06); border-radius: 8px;
+    padding: 8px 14px !important; font-size: 0.88rem !important;
+    transition: background 0.2s; cursor: pointer;
+}
+section[data-testid="stSidebar"] .stRadio label:hover { background: rgba(255,255,255,0.13); }
+
+.main-header {
+    background: linear-gradient(135deg, #1a3a2a 0%, #2d6a4f 40%, #4a9e75 100%);
+    border-radius: 16px; padding: 36px 44px; margin-bottom: 28px;
+    position: relative; overflow: hidden;
+}
+.main-header::after {
+    content: ""; position: absolute; right: -40px; top: -40px;
+    width: 220px; height: 220px;
+    background: rgba(255,255,255,0.05); border-radius: 50%;
+}
+.main-header::before {
+    content: ""; position: absolute; right: 80px; bottom: -60px;
+    width: 160px; height: 160px;
+    background: rgba(255,255,255,0.03); border-radius: 50%;
+}
+.main-header h1 {
+    font-family: "Cormorant Garamond", serif;
+    font-size: 2.4rem; font-weight: 700;
+    color: #ffffff; margin: 0 0 6px 0; letter-spacing: -0.3px;
+}
+.main-header p {
+    color: rgba(255,255,255,0.65); font-size: 0.82rem;
+    margin: 0; font-family: "DM Mono", monospace; letter-spacing: 0.8px;
+}
+
+.gov-badge {
+    display: inline-block; background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.85);
+    font-size: 0.68rem; font-family: "DM Mono", monospace;
+    padding: 4px 12px; border-radius: 20px; margin-bottom: 12px;
+    letter-spacing: 1px; text-transform: uppercase;
+}
+.author-badge {
+    display: inline-block; background: rgba(255,215,0,0.18);
+    border: 1px solid rgba(255,215,0,0.35); color: #ffd700;
+    font-size: 0.7rem; font-family: "DM Mono", monospace;
+    padding: 4px 12px; border-radius: 20px; margin-left: 8px;
+}
+
+.logo-mark {
+    font-family: "Cormorant Garamond", serif;
+    font-size: 1.5rem; font-weight: 700; color: #ffffff;
+    line-height: 1.1; letter-spacing: -0.5px;
+}
+.logo-sub {
+    font-size: 0.62rem; color: rgba(255,255,255,0.4);
+    font-family: "DM Mono", monospace; letter-spacing: 2px;
+    text-transform: uppercase; margin-top: 2px;
+}
+
+.section-card {
+    background: white; border: 1px solid #e0ead8;
+    border-radius: 16px; padding: 24px 28px; margin: 16px 0;
+    box-shadow: 0 4px 16px rgba(26,58,42,0.07);
+    transition: box-shadow 0.2s;
+}
+.section-card:hover { box-shadow: 0 6px 24px rgba(26,58,42,0.11); }
+.section-card-title {
+    font-family: "Cormorant Garamond", serif;
+    font-size: 1.1rem; font-weight: 600; color: #1a3a2a;
+    margin: 0 0 4px 0; padding-bottom: 10px; border-bottom: 2px solid #e8f5e9;
+}
+.section-card-subtitle {
+    font-size: 0.74rem; color: #5a8a6a;
+    font-family: "DM Mono", monospace; margin: 0 0 16px 0;
+}
+.section-title {
+    font-size: 0.68rem; text-transform: uppercase; letter-spacing: 2.5px;
+    color: #5a8a6a; font-family: "DM Mono", monospace;
+    margin: 28px 0 14px; padding-bottom: 8px; border-bottom: 1px solid #e0ead8;
+}
+
+.grupo-etario-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #1a3a2a, #2d6a4f);
+    color: white; font-size: 0.72rem; font-family: "DM Mono", monospace;
+    padding: 4px 14px; border-radius: 20px; margin-bottom: 16px;
+}
+
 .result-card { border-radius: 12px; padding: 20px 24px; margin: 12px 0; border-left: 4px solid; }
-.result-normal { background: #f0faf4; border-color: #22c55e; } .result-normal h3 { color: #15803d; } .result-normal p { color: #166534; }
-.result-riesgo { background: #fffbeb; border-color: #f59e0b; } .result-riesgo h3 { color: #b45309; } .result-riesgo p { color: #92400e; }
-.result-malo { background: #fef2f2; border-color: #ef4444; } .result-malo h3 { color: #b91c1c; } .result-malo p { color: #7f1d1d; }
-.result-sobrepeso { background: #faf5ff; border-color: #a855f7; } .result-sobrepeso h3 { color: #7e22ce; } .result-sobrepeso p { color: #6b21a8; }
-.result-card h3 { margin: 0 0 6px 0; font-size: 1.05rem; font-family: 'Playfair Display', serif; }
-.result-card p { margin: 0; font-size: 0.83rem; }
-.recom-item { background: white; border: 1px solid #e8e0f5; border-radius: 10px; padding: 14px 18px; margin: 8px 0; font-size: 0.84rem; color: #4a3570; box-shadow: 0 1px 4px rgba(45,27,105,0.05); }
-.recom-item strong { color: #2d1b69; font-weight: 500; }
-.alerta-critica { background: #fef2f2; border: 1px solid #fca5a5; border-radius: 10px; padding: 14px 18px; font-size: 0.83rem; color: #b91c1c; margin: 8px 0; font-weight: 500; }
-.alerta-moderada { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 10px; padding: 14px 18px; font-size: 0.83rem; color: #92400e; margin: 8px 0; font-weight: 500; }
-.campo-label { font-size: 0.72rem; color: #6b3fbf; font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 2px; }
-.freq-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 500; margin: 2px; font-family: 'DM Mono', monospace; }
-.freq-diario { background: #dcfce7; color: #15803d; }
-.freq-semanal { background: #eff6ff; color: #1d4ed8; }
-.freq-quincenal { background: #fef9c3; color: #854d0e; }
-.freq-ocasional { background: #fef2f2; color: #b91c1c; }
-.freq-nunca { background: #f1f5f9; color: #475569; }
-.sa-card { background: white; border: 1px solid #e8e0f5; border-radius: 10px; padding: 16px 18px; margin: 8px 0; border-left: 3px solid #6b3fbf; }
-.sa-card-title { font-size: 0.78rem; font-weight: 600; color: #2d1b69; font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; }
-.stButton > button { background: linear-gradient(135deg, #2d1b69, #6b3fbf) !important; color: white !important; border: none !important; border-radius: 10px !important; font-family: 'DM Sans', sans-serif !important; font-weight: 500 !important; padding: 10px 28px !important; transition: all 0.2s !important; box-shadow: 0 4px 12px rgba(45,27,105,0.25) !important; }
-.stButton > button:hover { transform: translateY(-1px) !important; box-shadow: 0 6px 18px rgba(45,27,105,0.35) !important; }
-.stTextInput > div > div > input, .stNumberInput > div > div > input { background: white !important; border: 1.5px solid #e0d4f5 !important; border-radius: 10px !important; color: #1a1025 !important; }
-.stSelectbox > div > div { background: white !important; border: 1.5px solid #e0d4f5 !important; border-radius: 10px !important; color: #1a1025 !important; }
-.stTextArea > div > div > textarea { background: white !important; border: 1.5px solid #e0d4f5 !important; border-radius: 10px !important; color: #1a1025 !important; }
-div[data-testid="stMetric"] { background: white; border: 1px solid #e8e0f5; border-radius: 12px; padding: 16px 20px; box-shadow: 0 2px 8px rgba(45,27,105,0.06); }
-div[data-testid="stMetric"] label { color: #9580c0 !important; font-size: 0.78rem !important; }
-div[data-testid="stMetric"] div[data-testid="stMetricValue"] { color: #2d1b69 !important; font-family: 'Playfair Display', serif !important; }
-.stTabs [data-baseweb="tab-list"] { background: white; border-radius: 12px; padding: 4px; border: 1px solid #e8e0f5; gap: 4px; }
-.stTabs [data-baseweb="tab"] { color: #9580c0 !important; border-radius: 8px !important; }
-.stTabs [aria-selected="true"] { background: linear-gradient(135deg, #2d1b69, #6b3fbf) !important; color: white !important; }
-.stSlider > div > div > div > div { background: #6b3fbf !important; }
-.footer-gov { margin-top: 50px; padding: 24px; background: white; border: 1px solid #e8e0f5; border-radius: 14px; font-size: 0.72rem; color: #9580c0; font-family: 'DM Mono', monospace; text-align: center; letter-spacing: 0.3px; line-height: 2; }
+.result-normal   { background: #f0faf4; border-color: #22c55e; }
+.result-normal h3  { color: #15803d; }
+.result-normal p   { color: #166534; }
+.result-riesgo   { background: #fffbeb; border-color: #f59e0b; }
+.result-riesgo h3  { color: #b45309; }
+.result-riesgo p   { color: #92400e; }
+.result-malo     { background: #fef2f2; border-color: #ef4444; }
+.result-malo h3    { color: #b91c1c; }
+.result-malo p     { color: #7f1d1d; }
+.result-sobrepeso  { background: #faf5ff; border-color: #a855f7; }
+.result-sobrepeso h3 { color: #7e22ce; }
+.result-sobrepeso p  { color: #6b21a8; }
+.result-card h3 { margin: 0 0 6px 0; font-size: 1.05rem; font-family: "Cormorant Garamond", serif; }
+.result-card p  { margin: 0; font-size: 0.83rem; }
+
+.recom-item {
+    background: white; border: 1px solid #e0ead8; border-radius: 10px;
+    padding: 14px 18px; margin: 8px 0; font-size: 0.84rem; color: #2d5a3a;
+    box-shadow: 0 2px 8px rgba(26,58,42,0.05);
+    transition: box-shadow 0.15s;
+}
+.recom-item:hover { box-shadow: 0 4px 12px rgba(26,58,42,0.09); }
+.recom-item strong { color: #1a3a2a; font-weight: 500; }
+
+.alerta-critica {
+    background: #fef2f2; border: 1px solid #fca5a5; border-radius: 10px;
+    padding: 14px 18px; font-size: 0.83rem; color: #b91c1c; margin: 8px 0; font-weight: 500;
+}
+.alerta-moderada {
+    background: #fffbeb; border: 1px solid #fcd34d; border-radius: 10px;
+    padding: 14px 18px; font-size: 0.83rem; color: #92400e; margin: 8px 0; font-weight: 500;
+}
+
+.campo-label {
+    font-size: 0.72rem; color: #2d6a4f; font-family: "DM Mono", monospace;
+    text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 2px;
+}
+
+.freq-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 500; margin: 2px; font-family: "DM Mono", monospace; }
+.freq-diario   { background: #dcfce7; color: #15803d; }
+.freq-semanal  { background: #eff6ff; color: #1d4ed8; }
+.freq-quincenal{ background: #fef9c3; color: #854d0e; }
+.freq-ocasional{ background: #fef2f2; color: #b91c1c; }
+.freq-nunca    { background: #f1f5f9; color: #475569; }
+
+.sa-card {
+    background: white; border: 1px solid #e0ead8; border-radius: 10px;
+    padding: 16px 18px; margin: 8px 0; border-left: 3px solid #2d6a4f;
+}
+.sa-card-title {
+    font-size: 0.78rem; font-weight: 600; color: #1a3a2a;
+    font-family: "DM Mono", monospace; text-transform: uppercase;
+    letter-spacing: 0.8px; margin-bottom: 10px;
+}
+
+.stButton > button {
+    background: linear-gradient(135deg, #1a3a2a, #2d6a4f) !important;
+    color: white !important; border: none !important; border-radius: 10px !important;
+    font-family: "DM Sans", sans-serif !important; font-weight: 500 !important;
+    padding: 10px 28px !important; transition: all 0.2s !important;
+    box-shadow: 0 4px 12px rgba(26,58,42,0.25) !important;
+}
+.stButton > button:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 18px rgba(26,58,42,0.35) !important;
+}
+
+.stTextInput > div > div > input,
+.stNumberInput > div > div > input {
+    background: white !important; border: 1.5px solid #c8ddc0 !important;
+    border-radius: 10px !important; color: #1a2010 !important;
+}
+.stSelectbox > div > div {
+    background: white !important; border: 1.5px solid #c8ddc0 !important;
+    border-radius: 10px !important; color: #1a2010 !important;
+}
+.stTextArea > div > div > textarea {
+    background: white !important; border: 1.5px solid #c8ddc0 !important;
+    border-radius: 10px !important; color: #1a2010 !important;
+}
+.stMultiSelect > div > div {
+    background: white !important; border: 1.5px solid #c8ddc0 !important;
+    border-radius: 10px !important;
+}
+
+div[data-testid="stMetric"] {
+    background: white; border: 1px solid #e0ead8; border-radius: 12px;
+    padding: 16px 20px; box-shadow: 0 2px 8px rgba(26,58,42,0.06);
+}
+div[data-testid="stMetric"] label { color: #5a8a6a !important; font-size: 0.78rem !important; }
+div[data-testid="stMetric"] div[data-testid="stMetricValue"] {
+    color: #1a3a2a !important; font-family: "Cormorant Garamond", serif !important;
+}
+
+.stTabs [data-baseweb="tab-list"] {
+    background: white; border-radius: 12px; padding: 6px;
+    border: 1px solid #e0ead8; gap: 6px;
+    box-shadow: 0 2px 8px rgba(26,58,42,0.05);
+}
+.stTabs [data-baseweb="tab"] {
+    color: #5a8a6a !important; border-radius: 8px !important;
+    font-family: "DM Sans", sans-serif !important;
+    font-size: 0.85rem !important; padding: 8px 16px !important;
+    font-weight: 500 !important;
+}
+.stTabs [aria-selected="true"] {
+    background: linear-gradient(135deg, #1a3a2a, #2d6a4f) !important;
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(26,58,42,0.25) !important;
+}
+.stSlider > div > div > div > div { background: #2d6a4f !important; }
+
+.kpi-card {
+    background: white; border: 1px solid #e0ead8; border-radius: 14px;
+    padding: 20px 16px; text-align: center;
+    box-shadow: 0 4px 16px rgba(26,58,42,0.07);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.kpi-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(26,58,42,0.12); }
+
+.login-container {
+    max-width: 420px; margin: 60px auto; padding: 40px;
+    background: white; border-radius: 20px;
+    border: 1px solid #e0ead8;
+    box-shadow: 0 8px 32px rgba(26,58,42,0.10);
+}
+.login-logo {
+    text-align: center; margin-bottom: 28px;
+}
+.login-title {
+    font-family: "Cormorant Garamond", serif;
+    font-size: 2rem; font-weight: 700; color: #1a3a2a;
+    text-align: center; margin-bottom: 4px;
+}
+.login-subtitle {
+    font-size: 0.78rem; color: #5a8a6a; text-align: center;
+    font-family: "DM Mono", monospace; letter-spacing: 0.5px; margin-bottom: 28px;
+}
+
+.footer-gov {
+    margin-top: 50px; padding: 24px; background: white;
+    border: 1px solid #e0ead8; border-radius: 14px;
+    font-size: 0.72rem; color: #5a8a6a;
+    font-family: "DM Mono", monospace; text-align: center;
+    letter-spacing: 0.3px; line-height: 2;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.fade-in { animation: fadeIn 0.5s ease forwards; }
 </style>
 """, unsafe_allow_html=True)
+
+# ══════════════════════════════════════════════════════════════════════════════
+# SISTEMA DE LOGIN
+# ══════════════════════════════════════════════════════════════════════════════
+def make_hash(password):
+    return hashlib.sha256(str.encode(password)).hexdigest()
+
+USUARIOS = {
+    "admin":    make_hash("NutriVida2026"),
+    "maira":    make_hash("Nutricionista2026"),
+    "demo":     make_hash("Demo2026"),
+    "piloto":   make_hash("Piloto2026"),
+}
+
+def login():
+    st.markdown("""
+    <div style="display:flex;justify-content:center;align-items:center;min-height:80vh;">
+    <div class="login-container fade-in">
+        <div class="login-logo">
+            <div style="width:72px;height:72px;background:linear-gradient(135deg,#1a3a2a,#2d6a4f);
+                        border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;
+                        justify-content:center;">
+                <span style="font-size:32px;">🌿</span>
+            </div>
+            <div class="login-title">NutriVida Colombia</div>
+            <div class="login-subtitle">Sistema Integral de Evaluación y Seguimiento Nutricional</div>
+            <div style="display:inline-block;background:#e8f5e9;border:1px solid #c8ddc0;
+                        color:#1a3a2a;font-size:0.65rem;font-family:'DM Mono',monospace;
+                        padding:3px 10px;border-radius:20px;letter-spacing:1px;">
+                v7.0 · MinSalud / ICBF · 2026
+            </div>
+        </div>
+    </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    col1, col2, col3 = st.columns([1, 1.2, 1])
+    with col2:
+        st.markdown('<div class="campo-label">Usuario</div>', unsafe_allow_html=True)
+        username = st.text_input("", placeholder="Ingresa tu usuario", key="usr", label_visibility="collapsed")
+        st.markdown('<div class="campo-label" style="margin-top:10px;">Contraseña</div>', unsafe_allow_html=True)
+        password = st.text_input("", placeholder="Ingresa tu contraseña", type="password", key="pwd", label_visibility="collapsed")
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        if st.button("Ingresar al sistema", key="login_btn"):
+            if username in USUARIOS and USUARIOS[username] == make_hash(password):
+                st.session_state["logged_in"] = True
+                st.session_state["username"] = username
+                st.rerun()
+            else:
+                st.error("Usuario o contraseña incorrectos")
+
+        st.markdown("""
+        <div style="text-align:center;margin-top:20px;font-size:0.7rem;color:#5a8a6a;
+                    font-family:'DM Mono',monospace;line-height:1.8;">
+            © 2026 Maira Alejandra Carrillo Florez<br>
+            Acceso restringido a personal autorizado<br>
+            Ley 23 de 1982 · Decisión Andina 351
+        </div>
+        """, unsafe_allow_html=True)
+
+if "logged_in" not in st.session_state:
+    st.session_state["logged_in"] = False
+
+if not st.session_state["logged_in"]:
+    login()
+    st.stop()
+
 
 # ── Grupos etários Colombia — Normativa vigente ────────────────────────────────
 # Ley 1098/2006 (Código Infancia), Ley 1622/2013 (Estatuto Juventud),
@@ -264,7 +537,7 @@ with st.sidebar:
     st.markdown("""<div style="padding:20px 0 16px;">
     <div style="font-size:0.62rem;color:rgba(255,255,255,0.35);font-family:'DM Mono',monospace;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;">Sistema Nacional</div>
     <div style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:white;line-height:1.2;">NutriVida<br>Colombia</div>
-    <div style="font-size:0.68rem;color:rgba(255,255,255,0.4);font-family:'DM Mono',monospace;letter-spacing:1px;margin-top:4px;">v6.0 · MinSalud / ICBF · 2026</div>
+    <div style="font-size:0.68rem;color:rgba(255,255,255,0.4);font-family:'DM Mono',monospace;letter-spacing:1px;margin-top:4px;">v7.0 · MinSalud / ICBF · 2026</div>
     </div><hr style="border-color:rgba(255,255,255,0.1);margin:0 0 16px 0;">""", unsafe_allow_html=True)
     modulo = st.radio("Módulo",["Evaluación Integral","Referencia Epidemiológica","Dashboard Poblacional","Registro Masivo","Acerca del sistema"],label_visibility="collapsed")
     st.markdown("""<hr style="border-color:rgba(255,255,255,0.1);margin:20px 0 12px;">
@@ -273,11 +546,19 @@ with st.sidebar:
     </div>""", unsafe_allow_html=True)
 
 # ── Header ─────────────────────────────────────────────────────────────────────
-st.markdown("""<div class="main-header">
+# Show logged in user
+    username = st.session_state.get("username","")
+    if st.sidebar.button("Cerrar sesión"):
+        st.session_state["logged_in"] = False
+        st.rerun()
+    st.sidebar.markdown(f"""<div style="font-size:0.65rem;color:rgba(255,255,255,0.4);font-family:'DM Mono',monospace;margin-top:8px;">
+    Sesión: {username}</div>""", unsafe_allow_html=True)
+
+st.markdown("""<div class="main-header fade-in">
 <div><span class="gov-badge">República de Colombia · Ministerio de Salud · ICBF</span>
 <span class="author-badge">© Maira Alejandra Carrillo Florez</span></div>
-<h1>Sistema Integral de Evaluación Nutricional</h1>
-<p>NUTRIVIDA v6.0 · Grupos etarios Normativa Colombia · 32 departamentos · 2026</p>
+<h1>Sistema Integral de Evaluación y Seguimiento Nutricional</h1>
+<p>NUTRIVIDA v7.0 · Grupos etarios Normativa Colombia · 32 departamentos · 2026</p>
 </div>""", unsafe_allow_html=True)
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -633,7 +914,20 @@ elif modulo == "Referencia Epidemiológica":
     <div style="font-size:0.78rem;color:rgba(255,255,255,0.6);font-family:'DM Mono',monospace;">ENSIN 2015 · SIVIGILA · MinSalud Colombia · Indicadores de salud pública</div>
     </div>""", unsafe_allow_html=True)
 
-    etabs = st.tabs(["ENSIN 2015","Salud pública y cronicidad","Tasas y prevalencias","Doble carga nutricional","Comparador departamental"])
+    st.markdown("""
+    <div style="background:linear-gradient(135deg,#1a3a2a,#2d6a4f);border-radius:10px;
+                padding:10px 20px;margin-bottom:16px;">
+        <div style="font-size:0.7rem;color:rgba(255,255,255,0.6);font-family:'DM Mono',monospace;
+                    letter-spacing:1px;">Selecciona una sección del panel epidemiológico</div>
+    </div>
+    """, unsafe_allow_html=True)
+    etabs = st.tabs([
+        "📊  ENSIN 2015 — Indicadores",
+        "🏥  Salud pública y cronicidad",
+        "📈  Tasas y prevalencias SIVIGILA",
+        "⚖️  Doble carga nutricional",
+        "🗺️  Comparador departamental"
+    ])
 
     with etabs[0]:
         st.markdown('<div class="section-title">Indicadores ENSIN 2015 — Colombia</div>', unsafe_allow_html=True)
@@ -869,9 +1163,21 @@ elif modulo == "Dashboard Poblacional":
     """, unsafe_allow_html=True)
 
     # Opción: datos demo o datos reales
-    fuente_datos = st.radio("Fuente de datos",
+    st.markdown('<div class="section-title">Selecciona la fuente de datos</div>', unsafe_allow_html=True)
+    c_r1, c_r2 = st.columns(2)
+    with c_r1:
+        st.markdown("""<div class="recom-item" style="border-left:3px solid #2d6a4f;padding:10px 14px;">
+        <strong>Datos de demostración</strong> — 1.250 pacientes simulados con distribución
+        realista por departamento. Ideal para explorar todas las funcionalidades del dashboard.
+        </div>""", unsafe_allow_html=True)
+    with c_r2:
+        st.markdown("""<div class="recom-item" style="border-left:3px solid #f59e0b;padding:10px 14px;">
+        <strong>Mis datos reales</strong> — Carga tu archivo Excel con datos reales de pacientes.
+        El dashboard se actualiza automáticamente con tu información.
+        </div>""", unsafe_allow_html=True)
+    fuente_datos = st.radio("",
         ["Datos de demostración (1.250 pacientes simulados)","Cargar mis datos reales (Excel)"],
-        horizontal=True)
+        horizontal=True, label_visibility="collapsed")
 
     if fuente_datos == "Cargar mis datos reales (Excel)":
         archivo_real = st.file_uploader("Cargar archivo Excel con datos reales", type=["xlsx","csv"])
@@ -1352,6 +1658,19 @@ elif modulo == "Registro Masivo":
     st.markdown('<div class="section-title">Plantillas por grupo etario — Normativa Colombia</div>', unsafe_allow_html=True)
     st.markdown('<div class="recom-item"><strong>Selecciona el grupo etario</strong> para descargar la plantilla con los campos específicos y el formato adecuado según la normativa colombiana vigente.</div>', unsafe_allow_html=True)
 
+    st.markdown("""
+    <div class="recom-item">
+        <strong>Grupos etarios según Normativa Colombia vigente:</strong><br>
+        <span style="font-size:0.78rem;color:#5a8a6a;">
+        Primera infancia (0-5 años) · Ley 1098/2006 &nbsp;|&nbsp;
+        Infancia (6-11 años) · Ley 1098/2006 &nbsp;|&nbsp;
+        Adolescencia (12-17 años) · Ley 1098/2006 &nbsp;|&nbsp;
+        Juventud (18-28 años) · Ley 1622/2013 &nbsp;|&nbsp;
+        Adultez (29-59 años) · Ley 1751/2015 &nbsp;|&nbsp;
+        Persona mayor (≥60 años) · Ley 1251/2008
+        </span>
+    </div>
+    """, unsafe_allow_html=True)
     grupo_plantilla = st.selectbox("Grupo etario para la plantilla", list(GRUPOS_ETARIOS.keys()))
 
     def crear_plantilla_grupo(grupo):
@@ -1454,7 +1773,7 @@ elif modulo == "Registro Masivo":
 elif modulo == "Acerca del sistema":
     c1,c2 = st.columns([3,2])
     with c1:
-        st.markdown('<div class="section-title">NutriVida Colombia v6.0 — descripción</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">NutriVida Colombia v7.0 — descripción</div>', unsafe_allow_html=True)
         for t,d,url in [
             ("Propósito","Sistema integral de vigilancia y evaluación nutricional para profesionales de salud del sector público colombiano. Evaluación por grupos etarios según normativa vigente.",""),
             ("Marco normativo","Ley 1098/2006, Ley 1622/2013, Ley 1251/2008, Ley 1751/2015, OMS/OPS 2006, ENSIN 2015, Res. 2465/2016, ELCSA, Protocolo AIEPI.","https://www.minsalud.gov.co"),
@@ -1489,7 +1808,7 @@ elif modulo == "Acerca del sistema":
             st.markdown(f'<div class="recom-item" style="padding:8px 14px;"><strong>{c}</strong> — {d} <a href="{url}" target="_blank" style="color:#a855f7;font-size:0.72rem;">Ver →</a></div>', unsafe_allow_html=True)
 
 st.markdown("""<div class="footer-gov">
-NutriVida Colombia v6.0 · Sistema Integral de Evaluación Nutricional · República de Colombia<br>
+NutriVida Colombia v7.0 · Sistema Integral de Evaluación y Seguimiento Nutricional · República de Colombia<br>
 Ministerio de Salud y Protección Social · ICBF · Datos con fines demostrativos<br><br>
 © 2026 Maira Alejandra Carrillo Florez — Todos los derechos reservados<br>
 Nutricionista - Dietista · Universidad de Pamplona<br>
