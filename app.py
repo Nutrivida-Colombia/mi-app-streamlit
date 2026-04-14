@@ -916,9 +916,16 @@ elif modulo == "Referencia Epidemiológica":
 
     st.markdown("""
     <div style="background:linear-gradient(135deg,#1a3a2a,#2d6a4f);border-radius:10px;
-                padding:10px 20px;margin-bottom:16px;">
-        <div style="font-size:0.7rem;color:rgba(255,255,255,0.6);font-family:'DM Mono',monospace;
-                    letter-spacing:1px;">Selecciona una sección del panel epidemiológico</div>
+                padding:12px 20px;margin-bottom:16px;display:flex;align-items:center;gap:16px;">
+        <div>
+            <div style="font-size:0.82rem;color:white;font-weight:500;margin-bottom:2px;">
+                Panel de Referencia Epidemiológica Nacional
+            </div>
+            <div style="font-size:0.68rem;color:rgba(255,255,255,0.6);font-family:'DM Mono',monospace;
+                        letter-spacing:0.5px;">
+                Selecciona una sección · Haz clic en el ícono de expansión de cada gráfica para ampliarla
+            </div>
+        </div>
     </div>
     """, unsafe_allow_html=True)
     etabs = st.tabs([
@@ -965,7 +972,7 @@ elif modulo == "Referencia Epidemiológica":
             fig_p.add_trace(go.Bar(name="2023",x=[7.8,15.2,22.1,20.3,18.4,11.4,4.8],y=["0-4","5-14","15-29","30-44","45-59","60-74","75+"],orientation="h",marker_color="#a855f7"))
             fig_p.add_trace(go.Bar(name="2050 proy.",x=[5.9,11.8,17.2,19.1,19.8,17.6,8.6],y=["0-4","5-14","15-29","30-44","45-59","60-74","75+"],orientation="h",marker_color="#f59e0b",opacity=0.7))
             fig_p.update_layout(barmode="group",height=250,margin=dict(l=0,r=0,t=20,b=0),title=dict(text="Distribución etaria (%)",font=dict(size=11,color="#9580c0")),paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",xaxis=dict(color="#9580c0",gridcolor="#f0e8ff",title="%"),yaxis=dict(color="#4a3570"),legend=dict(font=dict(color="#4a3570",size=10),bgcolor="rgba(0,0,0,0)"))
-            st.plotly_chart(fig_p, use_container_width=True)
+            st.plotly_chart(fig_p, use_container_width=True, config={"displayModeBar":True,"modeBarButtonsToAdd":["zoom2d","pan2d","zoomIn2d","zoomOut2d","resetScale2d"],"modeBarButtonsToRemove":["lasso2d","select2d"],"displaylogo":False})
 
         m1,m2,m3,m4 = st.columns(4)
         m1.metric("Esp. vida mujeres","80.1 años","↑ vs 2015")
@@ -981,7 +988,7 @@ elif modulo == "Referencia Epidemiológica":
         with c2:
             fig_e=go.Figure(go.Bar(x=[22.8,8.1,18.7,6.3,8.9,31.4],y=["HTA","Diabetes","Obesidad","ECV","EPOC","S. metabólico"],orientation="h",marker=dict(color=[22.8,8.1,18.7,6.3,8.9,31.4],colorscale=[[0,"#e9d5ff"],[0.5,"#a855f7"],[1,"#2d1b69"]])))
             fig_e.update_layout(height=250,margin=dict(l=0,r=0,t=10,b=0),paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",xaxis=dict(color="#9580c0",gridcolor="#f0e8ff",title="%"),yaxis=dict(color="#4a3570"))
-            st.plotly_chart(fig_e, use_container_width=True)
+            st.plotly_chart(fig_e, use_container_width=True, config={"displayModeBar":True,"modeBarButtonsToAdd":["zoom2d","pan2d","zoomIn2d","zoomOut2d","resetScale2d"],"modeBarButtonsToRemove":["lasso2d","select2d"],"displaylogo":False})
 
     with etabs[2]:
         st.markdown('<div class="section-title">Tasas y prevalencias — SIVIGILA</div>', unsafe_allow_html=True)
@@ -996,26 +1003,26 @@ elif modulo == "Referencia Epidemiológica":
         st.dataframe(df_dd, use_container_width=True, hide_index=True)
         fig_dd=px.bar(df_dd.head(12),x="Prev. desnut. aguda (%)",y="Departamento",orientation="h",color="Prev. desnut. aguda (%)",color_continuous_scale=[[0,"#fef9c3"],[0.4,"#f59e0b"],[0.7,"#ef4444"],[1,"#7f1d1d"]])
         fig_dd.update_layout(height=300,margin=dict(l=0,r=0,t=10,b=0),paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",xaxis=dict(color="#9580c0",gridcolor="#f0e8ff"),yaxis=dict(color="#4a3570",autorange="reversed"),coloraxis_showscale=False)
-        st.plotly_chart(fig_dd, use_container_width=True)
+        st.plotly_chart(fig_dd, use_container_width=True, config={"displayModeBar":True,"modeBarButtonsToAdd":["zoom2d","pan2d","zoomIn2d","zoomOut2d","resetScale2d"],"modeBarButtonsToRemove":["lasso2d","select2d"],"displaylogo":False})
 
         c1,c2=st.columns(2)
         with c1:
             df_an=pd.DataFrame({"Grupo":["Niños 6-23 m","Niños 2-4 a","Niños 5-12 a","Adolescentes","Mujeres 18-49 a","Gestantes","Adultos ≥65 a"],"Prevalencia (%)": [27.7,14.8,7.3,6.1,10.8,17.9,12.4]})
             fig_an=px.bar(df_an,x="Grupo",y="Prevalencia (%)",color="Prevalencia (%)",color_continuous_scale=[[0,"#fef2f2"],[0.5,"#f87171"],[1,"#b91c1c"]])
             fig_an.update_layout(height=240,margin=dict(l=0,r=0,t=20,b=0),title=dict(text="Anemia por grupo de edad",font=dict(size=11,color="#9580c0")),paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",xaxis=dict(color="#9580c0",tickangle=-30,tickfont=dict(size=9)),yaxis=dict(color="#9580c0",gridcolor="#f0e8ff"),coloraxis_showscale=False)
-            st.plotly_chart(fig_an, use_container_width=True)
+            st.plotly_chart(fig_an, use_container_width=True, config={"displayModeBar":True,"modeBarButtonsToAdd":["zoom2d","pan2d","zoomIn2d","zoomOut2d","resetScale2d"],"modeBarButtonsToRemove":["lasso2d","select2d"],"displaylogo":False})
         with c2:
             df_ob=pd.DataFrame({"Departamento":["San Andrés","Atlántico","Valle del Cauca","Risaralda","Bogotá","Antioquia","Santander","Cundinamarca","Nariño","Chocó"],"Obesidad adultos (%)": [26.4,24.1,22.8,21.9,20.4,19.8,18.9,18.1,13.2,11.8]})
             fig_ob=px.bar(df_ob,x="Obesidad adultos (%)",y="Departamento",orientation="h",color="Obesidad adultos (%)",color_continuous_scale=[[0,"#faf5ff"],[0.5,"#a855f7"],[1,"#2d1b69"]])
             fig_ob.update_layout(height=240,margin=dict(l=0,r=0,t=20,b=0),title=dict(text="Obesidad adultos por departamento",font=dict(size=11,color="#9580c0")),paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",xaxis=dict(color="#9580c0",gridcolor="#f0e8ff"),yaxis=dict(color="#4a3570",autorange="reversed"),coloraxis_showscale=False)
-            st.plotly_chart(fig_ob, use_container_width=True)
+            st.plotly_chart(fig_ob, use_container_width=True, config={"displayModeBar":True,"modeBarButtonsToAdd":["zoom2d","pan2d","zoomIn2d","zoomOut2d","resetScale2d"],"modeBarButtonsToRemove":["lasso2d","select2d"],"displaylogo":False})
 
         df_sup=pd.DataFrame({"Programa":["Hierro-ácido fólico gestantes","Vitamina A niños 6-59 m","Hierro niños 6-23 m","Calcio gestantes","Desparasitación 12-59 m","Complementación ICBF"],"Cobertura (%)": [68.4,71.2,52.3,44.8,61.7,78.9],"Meta MinSalud (%)": [90,85,80,70,80,90]})
         fig_sup=go.Figure()
         fig_sup.add_trace(go.Bar(name="Cobertura actual",x=df_sup["Cobertura (%)"],y=df_sup["Programa"],orientation="h",marker_color="#a855f7"))
         fig_sup.add_trace(go.Bar(name="Meta MinSalud",x=df_sup["Meta MinSalud (%)"],y=df_sup["Programa"],orientation="h",marker_color="#e9d5ff",opacity=0.5))
         fig_sup.update_layout(barmode="overlay",height=260,margin=dict(l=0,r=0,t=20,b=0),title=dict(text="Cobertura suplementación vs meta",font=dict(size=11,color="#9580c0")),paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",xaxis=dict(color="#9580c0",gridcolor="#f0e8ff",title="%"),yaxis=dict(color="#4a3570",tickfont=dict(size=9)),legend=dict(font=dict(color="#4a3570",size=10),bgcolor="rgba(0,0,0,0)"))
-        st.plotly_chart(fig_sup, use_container_width=True)
+        st.plotly_chart(fig_sup, use_container_width=True, config={"displayModeBar":True,"modeBarButtonsToAdd":["zoom2d","pan2d","zoomIn2d","zoomOut2d","resetScale2d"],"modeBarButtonsToRemove":["lasso2d","select2d"],"displaylogo":False})
 
     with etabs[3]:
         st.markdown('<div class="section-title">Doble carga nutricional</div>', unsafe_allow_html=True)
@@ -1028,7 +1035,7 @@ elif modulo == "Referencia Epidemiológica":
             df_dc=pd.DataFrame({"Departamento":["La Guajira","Chocó","Córdoba","Bolívar","Nariño","Cauca","Valle del Cauca","Antioquia","Cundinamarca","Atlántico"],"Desnut. crónica (%)": [27.9,18.2,12.4,11.8,16.3,15.1,6.2,7.8,8.1,6.9],"Obesidad adultos (%)": [9.6,11.8,14.2,13.7,13.2,12.8,22.8,19.8,18.1,24.1]})
             fig_dc=go.Figure(go.Scatter(x=df_dc["Obesidad adultos (%)"],y=df_dc["Desnut. crónica (%)"],mode="markers+text",text=df_dc["Departamento"],textposition="top center",textfont=dict(size=8,color="#4a3570"),marker=dict(size=12,color="#a855f7",opacity=0.7)))
             fig_dc.update_layout(height=280,margin=dict(l=0,r=0,t=20,b=0),paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",xaxis=dict(title="Obesidad adultos (%)",color="#9580c0",gridcolor="#f0e8ff"),yaxis=dict(title="Desnut. crónica niños (%)",color="#9580c0",gridcolor="#f0e8ff"),title=dict(text="Doble carga por departamento",font=dict(size=11,color="#9580c0")))
-            st.plotly_chart(fig_dc, use_container_width=True)
+            st.plotly_chart(fig_dc, use_container_width=True, config={"displayModeBar":True,"modeBarButtonsToAdd":["zoom2d","pan2d","zoomIn2d","zoomOut2d","resetScale2d"],"modeBarButtonsToRemove":["lasso2d","select2d"],"displaylogo":False})
         with c2:
             for t,d in [("Transición nutricional","Cambio de dietas tradicionales a ultraprocesados de bajo costo"),("Inseguridad alimentaria","Hogares que priorizan cantidad sobre calidad nutricional"),("Urbanización","Pérdida de producción propia de alimentos frescos"),("Publicidad alimentos","Exposición a ultraprocesados en población vulnerable"),("Pobreza","Limita acceso a alimentos de calidad nutricional")]:
                 st.markdown(f'<div class="recom-item" style="padding:9px 14px;"><strong>{t}</strong> — {d}</div>', unsafe_allow_html=True)
@@ -1037,7 +1044,7 @@ elif modulo == "Referencia Epidemiológica":
         fig_t.add_trace(go.Scatter(x=años,y=[13.2,13.2,10.8,8.5],name="Desnut. crónica < 5 años (%)",line=dict(color="#ef4444",width=2.5),mode="lines+markers"))
         fig_t.add_trace(go.Scatter(x=años,y=[45.9,51.2,56.4,62.1],name="Exceso de peso adultos (%)",line=dict(color="#a855f7",width=2.5),mode="lines+markers"))
         fig_t.update_layout(height=220,margin=dict(l=0,r=0,t=10,b=0),paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",xaxis=dict(color="#9580c0",gridcolor="#f0e8ff"),yaxis=dict(color="#9580c0",gridcolor="#f0e8ff",title="%"),legend=dict(font=dict(color="#4a3570",size=10),bgcolor="rgba(0,0,0,0)"))
-        st.plotly_chart(fig_t, use_container_width=True)
+        st.plotly_chart(fig_t, use_container_width=True, config={"displayModeBar":True,"modeBarButtonsToAdd":["zoom2d","pan2d","zoomIn2d","zoomOut2d","resetScale2d"],"modeBarButtonsToRemove":["lasso2d","select2d"],"displaylogo":False})
 
     with etabs[4]:
         st.markdown('<div class="section-title">Comparador departamental</div>', unsafe_allow_html=True)
@@ -1059,7 +1066,7 @@ elif modulo == "Referencia Epidemiológica":
         fig_r.add_trace(go.Scatterpolar(r=vd+[vd[0]],theta=cats+[cats[0]],fill="toself",name=ds,line_color="#a855f7",fillcolor="rgba(168,85,247,0.15)"))
         fig_r.add_trace(go.Scatterpolar(r=vn+[vn[0]],theta=cats+[cats[0]],fill="toself",name="Nacional",line_color="#f59e0b",fillcolor="rgba(245,158,11,0.1)"))
         fig_r.update_layout(polar=dict(radialaxis=dict(visible=True,color="#9580c0"),angularaxis=dict(color="#4a3570")),height=320,margin=dict(l=20,r=20,t=30,b=20),paper_bgcolor="rgba(0,0,0,0)",legend=dict(font=dict(color="#4a3570",size=10),bgcolor="rgba(0,0,0,0)"))
-        st.plotly_chart(fig_r, use_container_width=True)
+        st.plotly_chart(fig_r, use_container_width=True, config={"displayModeBar":True,"modeBarButtonsToAdd":["zoom2d","pan2d","zoomIn2d","zoomOut2d","resetScale2d"],"modeBarButtonsToRemove":["lasso2d","select2d"],"displaylogo":False})
         score=sum([3 if ind["dc"]>15 else 2 if ind["dc"]>10 else 1,3 if ind["ia"]>45 else 2 if ind["ia"]>25 else 1,2 if ind["cs"]<55 else 1 if ind["cs"]<70 else 0])
         if score>=7: cls,css2="RIESGO CRÍTICO","alerta-critica"
         elif score>=5: cls,css2="RIESGO ALTO","alerta-moderada"
@@ -1333,7 +1340,7 @@ elif modulo == "Dashboard Poblacional":
             yaxis=dict(color="#9580c0", gridcolor="#f0e8ff", title="Prevalencia (%)"),
             legend=dict(font=dict(color="#4a3570",size=9), bgcolor="rgba(0,0,0,0)"),
         )
-        st.plotly_chart(fig_tend, use_container_width=True)
+        st.plotly_chart(fig_tend, use_container_width=True, config={"displayModeBar":True,"modeBarButtonsToAdd":["zoom2d","pan2d","zoomIn2d","zoomOut2d","resetScale2d"],"modeBarButtonsToRemove":["lasso2d","select2d"],"displaylogo":False})
 
     with col_alertas:
         st.markdown('<div class="section-title">Panel de alertas</div>', unsafe_allow_html=True)
@@ -1414,7 +1421,7 @@ elif modulo == "Dashboard Poblacional":
                 title=titulo_ind,
             ),
         )
-        st.plotly_chart(fig_mapa, use_container_width=True)
+        st.plotly_chart(fig_mapa, use_container_width=True, config={"displayModeBar":True,"modeBarButtonsToAdd":["zoom2d","pan2d","zoomIn2d","zoomOut2d","resetScale2d"],"modeBarButtonsToRemove":["lasso2d","select2d"],"displaylogo":False})
 
     with col_tabla_mapa:
         st.caption("Prevalencia por departamento — ordenado por riesgo")
@@ -1450,7 +1457,7 @@ elif modulo == "Dashboard Poblacional":
             yaxis=dict(color="#9580c0", gridcolor="#f0e8ff", title="%"),
             legend=dict(font=dict(color="#4a3570",size=9), bgcolor="rgba(0,0,0,0)"),
         )
-        st.plotly_chart(fig_g, use_container_width=True)
+        st.plotly_chart(fig_g, use_container_width=True, config={"displayModeBar":True,"modeBarButtonsToAdd":["zoom2d","pan2d","zoomIn2d","zoomOut2d","resetScale2d"],"modeBarButtonsToRemove":["lasso2d","select2d"],"displaylogo":False})
 
     with col_pie_g:
         st.caption("Resumen crítico por grupo etario")
@@ -1502,7 +1509,7 @@ elif modulo == "Dashboard Poblacional":
             yaxis=dict(color="#4a3570", tickfont=dict(size=9)),
             coloraxis_showscale=False,
         )
-        st.plotly_chart(fig_agua, use_container_width=True)
+        st.plotly_chart(fig_agua, use_container_width=True, config={"displayModeBar":True,"modeBarButtonsToAdd":["zoom2d","pan2d","zoomIn2d","zoomOut2d","resetScale2d"],"modeBarButtonsToRemove":["lasso2d","select2d"],"displaylogo":False})
 
     with col_d2:
         # Inseguridad alimentaria vs desnutrición
@@ -1530,7 +1537,7 @@ elif modulo == "Dashboard Poblacional":
             yaxis=dict(color="#4a3570", tickfont=dict(size=9)),
             coloraxis_showscale=False,
         )
-        st.plotly_chart(fig_inseg, use_container_width=True)
+        st.plotly_chart(fig_inseg, use_container_width=True, config={"displayModeBar":True,"modeBarButtonsToAdd":["zoom2d","pan2d","zoomIn2d","zoomOut2d","resetScale2d"],"modeBarButtonsToRemove":["lasso2d","select2d"],"displaylogo":False})
 
     # ════════════════════════════════════════════════════════════════════════
     # PANEL 7 — PANEL PREDICTIVO
@@ -1632,7 +1639,7 @@ elif modulo == "Dashboard Poblacional":
         yaxis=dict(color="#9580c0", gridcolor="#f0e8ff", title="Prevalencia (%)"),
         legend=dict(font=dict(color="#4a3570",size=9), bgcolor="rgba(0,0,0,0)"),
     )
-    st.plotly_chart(fig_proy, use_container_width=True)
+    st.plotly_chart(fig_proy, use_container_width=True, config={"displayModeBar":True,"modeBarButtonsToAdd":["zoom2d","pan2d","zoomIn2d","zoomOut2d","resetScale2d"],"modeBarButtonsToRemove":["lasso2d","select2d"],"displaylogo":False})
 
     # Alertas predictivas
     if proy_d[2] > desnut_n/total*100 + 3:
@@ -1705,25 +1712,37 @@ elif modulo == "Registro Masivo":
 
     # Formato Excel con colores
     buf = io.BytesIO()
-    if OPENPYXL_OK:
-        try:
-            with pd.ExcelWriter(buf, engine='openpyxl') as writer:
-                df_plantilla.to_excel(writer, index=False, sheet_name=grupo_plantilla[:28])
-                ws = writer.sheets[grupo_plantilla[:28]]
-                sc = {"identificacion":"D8C5F5","antropometria":"C5E8F5","sociodemografico":"C5F5D8","seguridad_alimentaria":"F5E8C5","antecedentes":"F5C5C5","consumo":"F5F5C5"}
-                hf = PatternFill(start_color="2D1B69",end_color="2D1B69",fill_type="solid")
-                hfont = Font(bold=True,color="FFFFFF",size=10)
-                bd = Border(left=Side(style='thin',color='CCCCCC'),right=Side(style='thin',color='CCCCCC'),top=Side(style='thin',color='CCCCCC'),bottom=Side(style='thin',color='CCCCCC'))
-                for ci,cn in enumerate(df_plantilla.columns,1):
-                    c=ws.cell(row=1,column=ci); c.fill=hf; c.font=hfont; c.alignment=Alignment(horizontal='center',vertical='center',wrap_text=True); c.border=bd
-                    fc=sc["identificacion"] if ci<=8 else sc["antropometria"] if ci<=14 else sc["sociodemografico"] if ci<=20 else sc["seguridad_alimentaria"] if ci<=30 else sc["antecedentes"] if ci<=38 else sc["consumo"]
-                    dc=ws.cell(row=2,column=ci); dc.fill=PatternFill(start_color=fc,end_color=fc,fill_type="solid"); dc.border=bd; dc.alignment=Alignment(horizontal='left',vertical='center',wrap_text=True)
-                    ws.column_dimensions[get_column_letter(ci)].width=max(15,min(35,len(cn)+5))
-                ws.row_dimensions[1].height=35; ws.row_dimensions[2].height=20; ws.freeze_panes="A2"
-        except Exception:
-            buf = io.BytesIO()
-            df_plantilla.to_excel(buf, index=False)
-    else:
+    try:
+        from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
+        from openpyxl.utils import get_column_letter
+        with pd.ExcelWriter(buf, engine='openpyxl') as writer:
+            nombre_hoja = grupo_plantilla[:28].replace("/","_").replace("(","").replace(")","").replace("≥","")
+            df_plantilla.to_excel(writer, index=False, sheet_name=nombre_hoja)
+            ws = writer.sheets[nombre_hoja]
+            sc = {
+                "id":"E8F5E9","antro":"C8E6C9","socio":"DCEDC8",
+                "sa":"FFF9C4","ant":"FFCCBC","cons":"E1F5FE"
+            }
+            hf = PatternFill(start_color="1A3A2A",end_color="1A3A2A",fill_type="solid")
+            hfont = Font(bold=True,color="FFFFFF",size=10)
+            thin = Side(style="thin",color="CCCCCC")
+            bd = Border(left=thin,right=thin,top=thin,bottom=thin)
+            for ci,cn in enumerate(df_plantilla.columns,1):
+                c = ws.cell(row=1,column=ci)
+                c.fill=hf; c.font=hfont
+                c.alignment=Alignment(horizontal="center",vertical="center",wrap_text=True)
+                c.border=bd
+                fc = sc["id"] if ci<=8 else sc["antro"] if ci<=14 else sc["socio"] if ci<=20 else sc["sa"] if ci<=30 else sc["ant"] if ci<=38 else sc["cons"]
+                dc = ws.cell(row=2,column=ci)
+                dc.fill=PatternFill(start_color=fc,end_color=fc,fill_type="solid")
+                dc.border=bd
+                dc.alignment=Alignment(horizontal="left",vertical="center",wrap_text=True)
+                ws.column_dimensions[get_column_letter(ci)].width=max(15,min(35,len(str(cn))+5))
+            ws.row_dimensions[1].height=35
+            ws.row_dimensions[2].height=20
+            ws.freeze_panes="A2"
+    except Exception as ex:
+        buf = io.BytesIO()
         df_plantilla.to_excel(buf, index=False)
 
 
